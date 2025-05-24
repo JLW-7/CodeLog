@@ -30,8 +30,8 @@
 1. **Clone the repo:**
 
    ```bash
-   git clone https://github.com/yourusername/codelog.git
-   cd codelog
+   git clone https://github.com/yourusername/CodeLog.git
+   cd CodeLog
    ```
 
 2. **Install dependencies:**
