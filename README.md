@@ -1,73 +1,87 @@
-# CodeLog
+# 📝 CodeLog
 
-A modern time tracking application built with Next.js that helps professionals monitor and analyze their work hours across projects.
+**CodeLog** is a sleek, modern time-tracking app built to help developers and professionals track, reflect on, and improve how they spend their work hours — project by project.
 
-## Features
+---
 
-- Time tracking with start/stop functionality
-- Project-based organization of time entries
-- Visual analytics with contribution-style heatmap
-- Session notes and attachments support
-- Dark mode support
-- Responsive design
+## 🚀 Features
 
-## Development
+* ⏱️ Start/stop time tracking
+* 🗂️ Project-based log organization
+* 🗒️ Session notes & file attachments
+* 📊 Visual heatmap analytics
+* 🌙 Dark mode support
+* 📱 Fully responsive design
+* 💾 Local storage — no login required
 
-### Prerequisites
+---
 
-- Node.js (LTS version recommended)
-- npm or yarn
+## 🛠️ Getting Started
 
-### Setup
+### 🔧 Prerequisites
 
-1. Clone the repository
+* **Node.js** (LTS version recommended)
+* **npm** or **yarn**
+
+### 📦 Installation
+
+1. **Clone the repo:**
+
    ```bash
-   git clone https://github.com/yourusername/zebra-frontend.git
-   cd zebra-frontend
+   git clone https://github.com/yourusername/codelog.git
+   cd codelog
    ```
 
-2. Install dependencies
+2. **Install dependencies:**
+
    ```bash
    npm install
    # or
    yarn install
    ```
 
-3. Start development server
+3. **Run the dev server:**
+
    ```bash
    npm run dev
    # or
    yarn dev
    ```
 
-The application will be available at [http://localhost:3000](http://localhost:3000).
+Open your browser at [http://localhost:3000](http://localhost:3000)
 
-## Architecture
+---
 
-### Technology Stack
+## 🧱 Tech Stack
 
-- Next.js - React framework
-- Tailwind CSS - Styling
-- Zustand - State management
-- date-fns - Date manipulation
-- Lucide React - Icons
+* **Next.js** – App framework
+* **Tailwind CSS** – Styling
+* **Zustand** – State management
+* **date-fns** – Date handling
+* **Lucide React** – Icon set
 
-### Project Structure
+---
+
+## 🗂 Project Structure
 
 ```
 /
 ├── src/
-│   ├── app/          # Next.js app router pages
-│   ├── components/   # React components
-│   └── lib/          # Utilities and store
+│   ├── app/          # App router pages
+│   ├── components/   # UI components
+│   └── lib/          # Stores and utilities
 ├── public/           # Static assets
 └── ...config files
 ```
 
-## Contributing
+---
 
-Contributions are welcome. Please feel free to submit a Pull Request.
+## 🤝 Contributing
 
-## License
+Contributions are welcome! Feel free to open issues or submit pull requests to improve CodeLog.
 
-This project is licensed under the GNU Affero General Public License - see the [LICENSE](LICENSE) file for details.
+---
+
+## 📄 License
+
+Licensed under the **GNU Affero General Public License**. See the [LICENSE](LICENSE) file for details.
