@@ -2,63 +2,26 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/a
 
 class ApiClient {
   constructor() {
-    this.token = null;
-    if (typeof window !== 'undefined') {
-      // Get token from localStorage and ensure it's valid
-      const token = localStorage.getItem('zebra-token') || document.cookie.split('; ').find(row => row.startsWith('zebra-token='))?.split('=')[1];
-      if (token) {
-        this.token = token;
-        // Ensure both localStorage and cookie are set
-        localStorage.setItem('zebra-token', token);
-        document.cookie = `zebra-token=${token}; path=/; secure; samesite=strict`;
-      } else {
-        localStorage.removeItem('zebra-token');
-        document.cookie = 'zebra-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      }
-    }
-  }
-
-  setToken(token) {
-    this.token = token;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('zebra-token', token);
-      // Also set cookie for cross-browser support
-      document.cookie = `zebra-token=${token}; path=/; secure; samesite=strict`;
-    }
-  }
-
-  clearToken() {
-    this.token = null;
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('zebra-token');
-      // Also clear cookie
-      document.cookie = 'zebra-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-    }
+    // No auth token or storage handling here anymore
   }
 
   async request(endpoint, options = {}, isBlob = false) {
-    // Remove any leading slashes
     endpoint = endpoint.replace(/^\/+/, '');
-    console.log(`Making API request to ${endpoint}`, options);
+    const url = `${API_BASE_URL}/${endpoint}`;
+
+    // Simple headers: only add JSON Content-Type if body exists and not overridden
     const headers = {
       ...(options.body && !options.headers?.['Content-Type'] ? { 'Content-Type': 'application/json' } : {}),
-      ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
       ...options.headers,
     };
 
     try {
-      const url = `${API_BASE_URL}/${endpoint}`;
-      console.log(`Making request to: ${url}`);
       const response = await fetch(url, {
         ...options,
         headers,
       });
 
       if (!response.ok) {
-        if (response.status === 401) {
-          this.clearToken();
-          throw new Error('Unauthorized');
-        }
         const errorText = await response.text();
         console.error(`HTTP error! status: ${response.status}, body:`, errorText);
         throw new Error(`Request failed: ${response.statusText || response.status}`);
@@ -69,7 +32,6 @@ class ApiClient {
       }
 
       const text = await response.text();
-      console.log(`Response from ${endpoint}:`, text);
 
       let data;
       try {
@@ -79,34 +41,11 @@ class ApiClient {
         throw new Error('Invalid JSON response from server');
       }
 
-      if (!response.ok) {
-        throw new Error(data?.error || `HTTP error! status: ${response.status}`);
-      }
-
       return data;
     } catch (error) {
       console.error(`Error in request to ${endpoint}:`, error);
       throw error;
     }
-  }
-
-  // Auth endpoints
-  async register(email, password, name) {
-    const data = await this.request('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ email, password, name }),
-    });
-    this.setToken(data.token);
-    return data;
-  }
-
-  async login(email, password) {
-    const data = await this.request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    this.setToken(data.token);
-    return data;
   }
 
   // Work log endpoints
@@ -155,32 +94,36 @@ class ApiClient {
       const project = await this.request(`/projects/${id}`);
       if (!project) return null;
 
-      // Transform the response to match frontend expectations
       const sessions = (project.sessions || []).map(session => ({
         ...session,
         startTime: session.start_time || session.startTime,
         endTime: session.end_time || session.endTime,
-        duration: session.duration || (session.end_time && session.start_time ? 
-          new Date(session.end_time) - new Date(session.start_time) : 0),
+        duration: session.duration || (session.end_time && session.start_time
+          ? new Date(session.end_time) - new Date(session.start_time)
+          : 0),
         records: (session.records || []).map(record => ({
           ...record,
           files: (record.files || []).map(file => ({
             ...file,
             id: file.id || file.url?.split('/').pop(),
-            url: file.url || (file.id && file.id !== '00000000-0000-0000-0000-000000000000' ? `${API_BASE_URL}/files/${file.id}` : null),
-            type: file.type || file.mime_type || 'unknown'
+            url: file.url || (file.id && file.id !== '00000000-0000-0000-0000-000000000000'
+              ? `${API_BASE_URL}/files/${file.id}`
+              : null),
+            type: file.type || file.mime_type || 'unknown',
           })).filter(f => f.id && f.id !== '00000000-0000-0000-0000-000000000000'),
-          audioUrl: record.audio_url || (record.id && record.id !== '00000000-0000-0000-0000-000000000000' ? `${API_BASE_URL}/audio/${record.id}` : null),
-          timestamp: record.timestamp || record.created_at || new Date().toISOString()
-        }))
+          audioUrl: record.audio_url || (record.id && record.id !== '00000000-0000-0000-0000-000000000000'
+            ? `${API_BASE_URL}/audio/${record.id}`
+            : null),
+          timestamp: record.timestamp || record.created_at || new Date().toISOString(),
+        })),
       }));
 
       return {
         project: {
           ...project,
-          sessions
+          sessions,
         },
-        sessions
+        sessions,
       };
     } catch (error) {
       console.error('Error fetching project:', error);
@@ -212,7 +155,6 @@ class ApiClient {
       return null;
     }
     try {
-      // Remove any path prefix if present
       audioId = audioId.replace(/^\/audio\//, '').replace(/^audio\//, '');
       return await this.request(`audio/${audioId}`, {
         method: 'GET',
