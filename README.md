@@ -1,4 +1,4 @@
-# Code Log
+# CodeLog
 
 A modern time tracking application built with Next.js that helps professionals monitor and analyze their work hours across projects.
 
