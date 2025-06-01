@@ -57,56 +57,50 @@ const useStore = create(
         }
 
         const duration = lastElapsedTime + (Date.now() - startTime);
-        
+
         try {
-          console.log('Creating session:', currentSession);
-          // Save session to backend
-          const response = await api.request(`/projects/${currentSession.projectId}/sessions`, {
-            method: 'POST',
-            body: JSON.stringify({
-              start_time: currentSession.startTime,
-              duration: duration,
-              records: currentSession.records.map(record => ({
-                text: record.text || '',
-                git_link: record.gitLink || '',
-                files: (record.files || []).map(file => ({
-                  name: file.name,
-                  url: file.url,
-                  type: file.type,
-                  size: file.size
-                })),
-                audio_url: record.audioUrl || '',
-                timestamp: record.timestamp || new Date().toISOString()
-              }))
-            })
-          });
+          const sessionToSave = {
+            ...currentSession,
+            endTime: new Date().toISOString(),
+            duration,
+            records: currentSession.records.map(record => ({
+              text: record.text || '',
+              gitLink: record.gitLink || '',
+              files: (record.files || []).map(file => ({
+                name: file.name,
+                url: file.url,
+                type: file.type,
+                size: file.size,
+              })),
+              audioUrl: record.audioUrl || '',
+              timestamp: record.timestamp || new Date().toISOString(),
+            })),
+          };
 
-          console.log('Session created:', response);
+          await api.addSessionToProject(currentSession.projectId, sessionToSave);
 
-          // Fetch updated sessions after creation
           await get().loadProjects();
 
-          // Update local state
           set((state) => ({
             isRunning: false,
             lastElapsedTime: duration,
             startTime: null,
             currentSession: null,
             sessions: [...state.sessions, { ...currentSession, duration }],
-            error: null
+            error: null,
           }));
         } catch (error) {
           console.error('Failed to save session:', error);
-          // Still stop the timer but show error
           set({
             isRunning: false,
             lastElapsedTime: duration,
             startTime: null,
             currentSession: null,
-            error: 'Failed to save session'
+            error: 'Failed to save session',
           });
         }
       },
+
 
       // Project actions
       addProject: async (name, description = '') => {

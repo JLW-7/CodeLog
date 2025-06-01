@@ -1,184 +1,146 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+const STORAGE_KEYS = {
+  PROJECTS: 'mock_projects',
+  LOGS: 'mock_logs',
+};
+
+function getStored(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function setStored(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+function generateId() {
+  return crypto.randomUUID?.() || Math.random().toString(36).substring(2, 10);
+}
 
 class ApiClient {
-  constructor() {
-    // No auth token or storage handling here anymore
-  }
-
-  async request(endpoint, options = {}, isBlob = false) {
-    endpoint = endpoint.replace(/^\/+/, '');
-    const url = `${API_BASE_URL}/${endpoint}`;
-
-    // Simple headers: only add JSON Content-Type if body exists and not overridden
-    const headers = {
-      ...(options.body && !options.headers?.['Content-Type'] ? { 'Content-Type': 'application/json' } : {}),
-      ...options.headers,
-    };
-
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`HTTP error! status: ${response.status}, body:`, errorText);
-        throw new Error(`Request failed: ${response.statusText || response.status}`);
-      }
-
-      if (isBlob) {
-        return await response.blob();
-      }
-
-      const text = await response.text();
-
-      let data;
-      try {
-        data = text ? JSON.parse(text) : null;
-      } catch (e) {
-        console.error('Failed to parse JSON response:', e);
-        throw new Error('Invalid JSON response from server');
-      }
-
-      return data;
-    } catch (error) {
-      console.error(`Error in request to ${endpoint}:`, error);
-      throw error;
-    }
-  }
-
-  // Work log endpoints
+  // Work Log endpoints
   async createWorkLog(title, description, tags = []) {
-    return this.request('/logs', {
-      method: 'POST',
-      body: JSON.stringify({ title, description, tags }),
-    });
+    const logs = getStored(STORAGE_KEYS.LOGS);
+    const newLog = {
+      id: generateId(),
+      title,
+      description,
+      tags,
+      createdAt: new Date().toISOString(),
+    };
+    logs.push(newLog);
+    setStored(STORAGE_KEYS.LOGS, logs);
+    return newLog;
   }
 
   async getWorkLogs() {
-    return this.request('/logs');
+    return getStored(STORAGE_KEYS.LOGS);
   }
 
   async getWorkLog(id) {
-    return this.request(`/logs/${id}`);
+    const logs = getStored(STORAGE_KEYS.LOGS);
+    return logs.find(log => log.id === id) || null;
   }
 
   async updateWorkLog(id, updates) {
-    return this.request(`/logs/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    });
+    const logs = getStored(STORAGE_KEYS.LOGS);
+    const index = logs.findIndex(log => log.id === id);
+    if (index === -1) return null;
+
+    logs[index] = { ...logs[index], ...updates };
+    setStored(STORAGE_KEYS.LOGS, logs);
+    return logs[index];
   }
 
   async deleteWorkLog(id) {
-    return this.request(`/logs/${id}`, {
-      method: 'DELETE',
-    });
+    const logs = getStored(STORAGE_KEYS.LOGS);
+    const updated = logs.filter(log => log.id !== id);
+    setStored(STORAGE_KEYS.LOGS, updated);
+    return true;
   }
 
   // Project endpoints
   async createProject(name, description) {
-    return this.request('/projects', {
-      method: 'POST',
-      body: JSON.stringify({ name, description }),
-    });
+    const projects = getStored(STORAGE_KEYS.PROJECTS);
+    const newProject = {
+      id: generateId(),
+      name,
+      description,
+      sessions: [],
+    };
+    projects.push(newProject);
+    setStored(STORAGE_KEYS.PROJECTS, projects);
+    return newProject;
   }
 
   async getProjects() {
-    return this.request('/projects');
+    return getStored(STORAGE_KEYS.PROJECTS);
   }
 
   async getProject(id) {
-    try {
-      const project = await this.request(`/projects/${id}`);
-      if (!project) return null;
+    const projects = getStored(STORAGE_KEYS.PROJECTS);
+    const project = projects.find(p => p.id === id);
+    if (!project) return null;
 
-      const sessions = (project.sessions || []).map(session => ({
-        ...session,
-        startTime: session.start_time || session.startTime,
-        endTime: session.end_time || session.endTime,
-        duration: session.duration || (session.end_time && session.start_time
-          ? new Date(session.end_time) - new Date(session.start_time)
-          : 0),
-        records: (session.records || []).map(record => ({
-          ...record,
-          files: (record.files || []).map(file => ({
-            ...file,
-            id: file.id || file.url?.split('/').pop(),
-            url: file.url || (file.id && file.id !== '00000000-0000-0000-0000-000000000000'
-              ? `${API_BASE_URL}/files/${file.id}`
-              : null),
-            type: file.type || file.mime_type || 'unknown',
-          })).filter(f => f.id && f.id !== '00000000-0000-0000-0000-000000000000'),
-          audioUrl: record.audio_url || (record.id && record.id !== '00000000-0000-0000-0000-000000000000'
-            ? `${API_BASE_URL}/audio/${record.id}`
-            : null),
-          timestamp: record.timestamp || record.created_at || new Date().toISOString(),
-        })),
-      }));
+    const sessions = (project.sessions || []).map(session => ({
+      ...session,
+      startTime: session.startTime || null,
+      endTime: session.endTime || null,
+      duration: session.duration || 0,
+      records: session.records || [],
+    }));
 
-      return {
-        project: {
-          ...project,
-          sessions,
-        },
+    return {
+      project: {
+        ...project,
         sessions,
-      };
-    } catch (error) {
-      console.error('Error fetching project:', error);
-      throw error;
-    }
-  }
-
-  async getFile(fileId) {
-    if (!fileId || fileId === '00000000-0000-0000-0000-000000000000') {
-      console.error('Invalid file ID');
-      return null;
-    }
-    try {
-      return await this.request(`files/${fileId}`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/octet-stream',
-        },
-      }, true);
-    } catch (error) {
-      console.error('Error fetching file:', error);
-      return null;
-    }
-  }
-
-  async getAudio(audioId) {
-    if (!audioId || audioId === '00000000-0000-0000-0000-000000000000') {
-      console.error('Invalid audio ID');
-      return null;
-    }
-    try {
-      audioId = audioId.replace(/^\/audio\//, '').replace(/^audio\//, '');
-      return await this.request(`audio/${audioId}`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'audio/*',
-        },
-      }, true);
-    } catch (error) {
-      console.error('Error fetching audio:', error);
-      return null;
-    }
+      },
+      sessions,
+    };
   }
 
   async updateProject(id, updates) {
-    return this.request(`/projects/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    });
+    const projects = getStored(STORAGE_KEYS.PROJECTS);
+    const index = projects.findIndex(p => p.id === id);
+    if (index === -1) return null;
+
+    projects[index] = { ...projects[index], ...updates };
+    setStored(STORAGE_KEYS.PROJECTS, projects);
+    return projects[index];
   }
 
   async deleteProject(id) {
-    return this.request(`/projects/${id}`, {
-      method: 'DELETE',
-    });
+    const projects = getStored(STORAGE_KEYS.PROJECTS);
+    const updated = projects.filter(p => p.id !== id);
+    setStored(STORAGE_KEYS.PROJECTS, updated);
+    return true;
+  }
+
+  // Placeholder for file/audio APIs
+  async getFile(fileId) {
+    console.warn('Mocked getFile called — no file system');
+    return null;
+  }
+
+  async getAudio(audioId) {
+    console.warn('Mocked getAudio called — no audio system');
+    return null;
+  }
+
+  async addSessionToProject(projectId, session) {
+    const projects = getStored(STORAGE_KEYS.PROJECTS);
+    const index = projects.findIndex(p => p.id === projectId);
+    if (index === -1) return null;
+
+    const project = projects[index];
+    project.sessions = project.sessions || [];
+    project.sessions.push(session);
+
+    projects[index] = project;
+    setStored(STORAGE_KEYS.PROJECTS, projects);
+    return session;
   }
 }
 
