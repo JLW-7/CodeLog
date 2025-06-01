@@ -59,6 +59,8 @@ export default function ProjectPage() {
 
         setProject(data.project);
         setSessions(validSessions);
+        console.log("Sessions:", validSessions);
+
         toast.success('Project loaded successfully');
       } catch (error) {
         console.error('Failed to load project:', error);
@@ -309,8 +311,8 @@ export default function ProjectPage() {
 
         <div className="space-y-6">
           <h2 className="text-2xl font-semibold mb-4">Sessions</h2>
-          {sessions.map((session) => (
-            <Card key={session.id}>
+          {sessions.map((session, index) => (
+            <Card key={session.id ?? `session-${index}`}>
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
