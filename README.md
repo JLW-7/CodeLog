@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> This project is broken and no longer actively maintained. Feel free to fork it and add your own desired features, like a backend or database.
+
 # 📝 CodeLog
 
 > Stay focused, stay organized.
