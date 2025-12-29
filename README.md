@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> This project is broken and no longer actively maintained. Feel free to fork it and add your own desired features, like a backend or database.
+> This project is currently broken and fixing is still in progress.
 
 # 📝 CodeLog
 
