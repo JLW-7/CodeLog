@@ -14,7 +14,9 @@
 * 📊 Visual heatmap analytics
 * 🌙 Dark mode support
 * 📱 Fully responsive design
-* 💾 Local storage — no login required
+* � User authentication
+* ☁️ Cloud storage for files
+* 🗄️ PostgreSQL database
 
 ---
 
@@ -24,6 +26,8 @@
 
 * **Node.js** (LTS version recommended)
 * **npm** or **yarn**
+* **PostgreSQL** database
+* **AWS S3** bucket (for file storage)
 
 ### 📦 Installation
 
@@ -38,17 +42,92 @@
 
    ```bash
    npm install
-   # or
-   yarn install
    ```
 
-3. **Run the dev server:**
+3. **Set up environment variables:**
+
+   Copy `.env.example` to `.env` and fill in your values:
+
+   ```env
+   DATABASE_URL="your-postgresql-connection-string"
+   NEXTAUTH_SECRET="your-nextauth-secret"
+   NEXTAUTH_URL="http://localhost:3000"
+   AWS_ACCESS_KEY_ID="your-aws-access-key"
+   AWS_SECRET_ACCESS_KEY="your-aws-secret-key"
+   AWS_REGION="us-east-1"
+   S3_BUCKET_NAME="your-bucket-name"
+   ```
+
+4. **Set up the database:**
+
+   ```bash
+   npm run db:migrate
+   npm run db:seed
+   ```
+
+5. **Run the dev server:**
 
    ```bash
    npm run dev
-   # or
-   yarn dev
    ```
+
+---
+
+## 🚀 Deployment
+
+### Vercel
+
+1. Connect your GitHub repo to Vercel
+2. Set environment variables in Vercel dashboard
+3. Use Vercel Postgres for the database
+4. Deploy!
+
+### Other Platforms
+
+The app can be deployed to any platform supporting Next.js, such as Netlify, Railway, or Heroku.
+
+---
+
+## 📁 Project Structure
+
+```
+src/
+├── app/
+│   ├── api/              # API routes
+│   ├── auth/             # Authentication pages
+│   ├── dashboard/        # Dashboard page
+│   ├── projects/         # Projects pages
+│   └── timer/            # Timer page
+├── components/           # Reusable components
+├── lib/                  # Utilities and configurations
+└── prisma/               # Database schema and migrations
+```
+
+---
+
+## 🧪 Testing
+
+Run the test suite:
+
+```bash
+npm run test
+```
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repo
+2. Create a feature branch
+3. Make your changes
+4. Run tests
+5. Submit a PR
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
 
 Open your browser at [http://localhost:3000](http://localhost:3000)
 
