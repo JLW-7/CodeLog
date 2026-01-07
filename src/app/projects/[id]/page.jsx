@@ -215,9 +215,10 @@ export default function ProjectPage() {
   };
 
   const handleFileClick = async (file) => {
+    console.log('Clicked file:', file);
     try {
       if (!file?.id || file.id === '00000000-0000-0000-0000-000000000000') {
-        console.error('Invalid file ID');
+        console.error('Invalid file ID', file);
         return;
       }
 
