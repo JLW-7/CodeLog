@@ -1,11 +1,11 @@
 > [!IMPORTANT]
 > This project is currently broken and fixing is still in progress.
 
-# 📝 CodeLog
+# Milestone
 
 > Stay focused, stay organized.
 
-**CodeLog** is a sleek, modern time-tracking app built to help developers and professionals track, reflect on, and improve how they spend their work hours — project by project.
+**Milestone** is a sleek, modern time-tracking app built to help developers and professionals track, reflect on, and improve how they spend their work hours — project by project.
 
 ---
 
